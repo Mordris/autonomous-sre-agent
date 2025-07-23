@@ -1,0 +1,4 @@
+# AIDA/feedback_ui/requirements.txt
+streamlit
+mlflow
+pandas

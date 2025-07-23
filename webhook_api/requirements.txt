@@ -1,0 +1,4 @@
+# AIDA/webhook_api/requirements.txt
+fastapi
+uvicorn[standard]
+redis

@@ -1,0 +1,26 @@
+# AIDA/aida_agent/requirements.txt
+redis
+mlflow
+python-dotenv
+
+# AI and Agent Framework
+langchain
+langchain-openai
+langchain-huggingface
+langchain-groq
+
+# Vector Database and Embeddings
+chromadb
+sentence-transformers
+
+# Document Loading Utilities
+langchain-community
+unstructured[md]
+
+# Libraries for Fine-Tuning
+transformers
+peft
+trl
+bitsandbytes
+accelerate
+datasets

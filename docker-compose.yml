@@ -1,0 +1,106 @@
+# AIDA/docker-compose.yml
+# Final, Definitive, Production-Ready Version
+services:
+  # AIDA Agent
+  aida_agent:
+    build:
+      context: ./aida_agent
+      secrets:
+        - huggingface_token
+    container_name: aida_agent
+    env_file: ./.env
+    environment:
+      - REDIS_HOST=redis
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      # --- THIS IS THE CRUCIAL LINE ---
+      # Set to "true" to use your fine-tuned Gemma model.
+      # Set to "false" to use the OpenAI API.
+      - USE_LOCAL_MODEL=true
+    depends_on:
+      - redis
+      - mlflow
+    volumes:
+      - hf_cache:/home/aida/.cache/huggingface
+
+  # Webhook API (No changes needed, but bind mount is okay for simple apps)
+  webhook_api:
+    build:
+      context: ./webhook_api
+    container_name: webhook_api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    volumes:
+      - ./webhook_api:/app
+
+  # Redis
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # PostgreSQL Database for MLflow
+  db:
+    image: postgres:13
+    container_name: mlflow_db
+    environment:
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=mlflow
+      - POSTGRES_DB=mlflow
+    volumes:
+      - aida_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    stop_grace_period: 1m
+
+  # MLflow service
+  mlflow:
+    build:
+      context: .
+      dockerfile: Mlflow.Dockerfile
+    container_name: mlflow
+    depends_on:
+      - db
+    environment:
+      - BACKEND_STORE_URI=postgresql://mlflow:mlflow@db:5432/mlflow
+      - ARTIFACT_ROOT=/mlruns
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlruns
+
+  # Feedback UI
+  feedback_ui:
+    build:
+      context: ./feedback_ui
+    container_name: feedback_ui
+    ports:
+      - "8501:8501"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      - mlflow
+    volumes:
+      - ./feedback_ui:/app
+
+volumes:
+  redis_data:
+  mlflow_data:
+  chroma_db:
+  aida_postgres_data:
+    external: true
+  hf_cache:
+
+# --- NEW: Define the secret ---
+# This tells Docker Compose where to find the secret value on the host machine.
+secrets:
+  huggingface_token:
+    file: ./huggingface_token.txt

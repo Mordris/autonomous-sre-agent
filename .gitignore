@@ -1,0 +1,30 @@
+# AIDA/.gitignore
+
+# Python generated files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Local Data Volumes (these can get very large)
+chroma_db/
+mlflow_data/
+redis_data/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*payload.json
+
+# Secrets
+huggingface_token.txt
+
+# Model files
+adapter_model.safetensors
